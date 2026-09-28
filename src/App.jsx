@@ -23,10 +23,16 @@ import { ColdLeads } from './pages/ColdLeads';
 import { Leads } from './pages/Leads';
 import { BadgesProfile } from './pages/BadgesProfile';
 import { SettingsConfig } from './pages/SettingsConfig';
+import { initRealtimeSync } from './utils/realtimeSync';
 
 export function App() {
   const { agent, loading } = useAuth();
   const location = useLocation();
+
+  // Initialize real-time cross-device data synchronization
+  React.useEffect(() => {
+    initRealtimeSync();
+  }, []);
 
   // Public routes without navbar/bottom nav framing
   const isPublicRoute =

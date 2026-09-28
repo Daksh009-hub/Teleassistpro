@@ -170,10 +170,22 @@ export function Leads() {
       )
       .subscribe();
 
+    // Real-time broadcast sync listener
+    const handleSync = (e) => {
+      if (!e.detail || e.detail.store === 'leads' || e.detail.store === 'clients' || e.type === 'app-sync-full') {
+        loadLeads(true);
+      }
+    };
+
+    window.addEventListener('app-sync-update', handleSync);
+    window.addEventListener('app-sync-full', handleSync);
+
     return () => {
       clearInterval(pollInterval);
       window.removeEventListener('focus', handleWindowFocus);
       document.removeEventListener('visibilitychange', handleWindowFocus);
+      window.removeEventListener('app-sync-update', handleSync);
+      window.removeEventListener('app-sync-full', handleSync);
       supabase.removeChannel(channel);
     };
   }, [agent?.id]);

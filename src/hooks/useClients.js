@@ -7,20 +7,38 @@ export function useClients() {
   const [loading, setLoading] = useState(true);
   const { awardXP } = useGamification();
 
-  const fetchClients = useCallback(async () => {
-    setLoading(true);
+  const fetchClients = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       const data = await getAllFromStore('clients');
       setClients(data || []);
     } catch (err) {
       console.error('Failed to load clients:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchClients();
+    fetchClients(false);
+
+    const handleSync = (e) => {
+      if (!e.detail || e.detail.store === 'clients' || e.type === 'app-sync-full') {
+        fetchClients(true);
+      }
+    };
+
+    window.addEventListener('app-sync-update', handleSync);
+    window.addEventListener('app-sync-full', handleSync);
+
+    return () => {
+      window.removeEventListener('app-sync-update', handleSync);
+      window.removeEventListener('app-sync-full', handleSync);
+    };
   }, [fetchClients]);
 
   const addClient = async (clientData) => {

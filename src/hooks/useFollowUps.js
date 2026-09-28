@@ -7,20 +7,38 @@ export function useFollowUps() {
   const [loading, setLoading] = useState(true);
   const { awardXP, completeDailyGoal } = useGamification();
 
-  const fetchFollowUps = useCallback(async () => {
-    setLoading(true);
+  const fetchFollowUps = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       const data = await getAllFromStore('follow_ups');
       setFollowUps(data || []);
     } catch (err) {
       console.error('Failed to load follow-ups:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchFollowUps();
+    fetchFollowUps(false);
+
+    const handleSync = (e) => {
+      if (!e.detail || e.detail.store === 'follow_ups' || e.type === 'app-sync-full') {
+        fetchFollowUps(true);
+      }
+    };
+
+    window.addEventListener('app-sync-update', handleSync);
+    window.addEventListener('app-sync-full', handleSync);
+
+    return () => {
+      window.removeEventListener('app-sync-update', handleSync);
+      window.removeEventListener('app-sync-full', handleSync);
+    };
   }, [fetchFollowUps]);
 
   const todayStr = new Date().toISOString().split('T')[0];

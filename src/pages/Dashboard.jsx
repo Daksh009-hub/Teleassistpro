@@ -49,7 +49,25 @@ export function Dashboard() {
 
   // Load policies for quote tracker nudges & policy counters
   useEffect(() => {
-    getAllFromStore('policies').then(res => setPolicies(res || []));
+    const refreshPolicies = () => {
+      getAllFromStore('policies').then(res => setPolicies(res || []));
+    };
+
+    refreshPolicies();
+
+    const handleSync = (e) => {
+      if (!e.detail || e.detail.store === 'policies' || e.type === 'app-sync-full') {
+        refreshPolicies();
+      }
+    };
+
+    window.addEventListener('app-sync-update', handleSync);
+    window.addEventListener('app-sync-full', handleSync);
+
+    return () => {
+      window.removeEventListener('app-sync-update', handleSync);
+      window.removeEventListener('app-sync-full', handleSync);
+    };
   }, []);
 
   // In-app dialer visibility change listener (PRD Screen 3C)

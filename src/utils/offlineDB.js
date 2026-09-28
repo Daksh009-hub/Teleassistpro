@@ -10,6 +10,7 @@ import {
   INITIAL_SERVICE_REQUESTS,
   INITIAL_QUOTE_EVENTS
 } from './mockData.js';
+import { syncMutationToServer } from './realtimeSync.js';
 
 const DB_NAME = 'tele_assist_pro_db';
 const DB_VERSION = 3;
@@ -174,6 +175,10 @@ export async function putInStore(storeName, val, recordSync = true) {
       FALLBACK_SEED[storeName].push(val);
     }
   }
+
+  // Push mutation to central server for instant global sync across all devices
+  syncMutationToServer(storeName, 'put', val);
+
   return val;
 }
 
@@ -198,6 +203,10 @@ export async function deleteFromStore(storeName, key, recordSync = true) {
   if (FALLBACK_SEED[storeName]) {
     FALLBACK_SEED[storeName] = FALLBACK_SEED[storeName].filter(item => item.id !== key);
   }
+
+  // Push deletion to central server for instant global sync across all devices
+  syncMutationToServer(storeName, 'delete', key);
+
   return true;
 }
 
