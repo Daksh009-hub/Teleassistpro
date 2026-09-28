@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export function Login() {
-  const [email, setEmail] = useState('rajesh.lic@gmail.com');
-  const [password, setPassword] = useState('lic123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -22,14 +22,6 @@ export function Login() {
       setError(res.error || 'Invalid credentials');
       setLoading(false);
     }
-  };
-
-  const handleDemoQuickLogin = async () => {
-    setEmail('rajesh.lic@gmail.com');
-    setPassword('lic123456');
-    setLoading(true);
-    await login('rajesh.lic@gmail.com', 'lic123456');
-    navigate('/dashboard');
   };
 
   return (
@@ -96,25 +88,6 @@ export function Login() {
             )}
           </button>
         </form>
-
-        <div className="text-center my-2">
-          <span className="text-muted small">or</span>
-        </div>
-
-        {/* 1-Click Demo Login for SIH judges / instant evaluation */}
-        <button
-          type="button"
-          className="btn btn-outline-success w-100 fw-bold py-2 small d-flex align-items-center justify-content-center"
-          onClick={handleDemoQuickLogin}
-        >
-          <span className="me-2">⚡</span> Quick Demo Login (Rajesh Verma)
-        </button>
-
-        <div className="mt-3 text-center">
-          <small className="text-muted" style={{ fontSize: '0.72rem' }}>
-            Prototype Version 1.1 | SIH Hackathon
-          </small>
-        </div>
       </div>
     </div>
   );

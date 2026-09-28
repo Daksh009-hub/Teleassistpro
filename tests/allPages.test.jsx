@@ -45,13 +45,18 @@ describe('Full End-to-End Screen Testing Suite', () => {
     await initializeIndexedDB();
   });
 
-  it('Screen 1: Login Page renders and quick demo login functions', async () => {
+  it('Screen 1: Login Page renders and login form functions', async () => {
     renderWithProviders(<Login />, { route: '/login' });
     expect(screen.getByText(/Agent Login/i)).toBeTruthy();
-    expect(screen.getByText(/Quick Demo Login/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Sign In to Assistant/i })).toBeTruthy();
 
-    const demoBtn = screen.getByText(/Quick Demo Login/i);
-    fireEvent.click(demoBtn);
+    const emailInput = screen.getByPlaceholderText(/agent@licindia.com/i);
+    const passInput = screen.getByPlaceholderText(/••••••••/i);
+    fireEvent.change(emailInput, { target: { value: 'rajesh.lic@gmail.com' } });
+    fireEvent.change(passInput, { target: { value: 'lic123456' } });
+
+    const submitBtn = screen.getByRole('button', { name: /Sign In to Assistant/i });
+    fireEvent.click(submitBtn);
   });
 
   it('Screen 2: Dashboard Page renders action engine, clients, and search bar', async () => {
