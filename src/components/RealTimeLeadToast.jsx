@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { playNotificationSound } from '../utils/sound';
 import { useGamification } from '../context/GamificationContext';
@@ -9,9 +9,51 @@ export function RealTimeLeadToast() {
   const { agent } = useAuth();
   const { awardXP } = useGamification();
   const [activeLead, setActiveLead] = useState(null);
+  const seenLeadIdsRef = useRef(new Set());
+  const isInitialFetchRef = useRef(true);
 
   useEffect(() => {
     if (!agent?.id) return;
+
+    // Check centralized server API for leads submitted from visiting cards across devices
+    const checkServerLeads = async () => {
+      try {
+        const res = await fetch('/api/leads');
+        if (!res.ok) return;
+        const list = await res.json();
+        if (!Array.isArray(list)) return;
+
+        if (isInitialFetchRef.current) {
+          list.forEach(l => {
+            if (l?.id) seenLeadIdsRef.current.add(l.id);
+          });
+          isInitialFetchRef.current = false;
+          return;
+        }
+
+        const freshLead = list.find(l => l && l.id && !seenLeadIdsRef.current.has(l.id) && l.status === 'new');
+        if (freshLead) {
+          seenLeadIdsRef.current.add(freshLead.id);
+          setActiveLead(freshLead);
+          playNotificationSound();
+          if (typeof awardXP === 'function') {
+            await awardXP('lead_captured', `Captured lead from ${freshLead.full_name || 'Visitor'}!`).catch(() => {});
+          }
+          setTimeout(() => {
+            setActiveLead(null);
+          }, 8000);
+        }
+
+        list.forEach(l => {
+          if (l?.id) seenLeadIdsRef.current.add(l.id);
+        });
+      } catch (err) {
+        // Fallback silently if offline
+      }
+    };
+
+    checkServerLeads();
+    const pollInterval = setInterval(checkServerLeads, 4000);
 
     // Supabase Realtime channel subscription
     const channel = supabase
@@ -26,19 +68,23 @@ export function RealTimeLeadToast() {
         },
         async (payload) => {
           const lead = payload.new;
-          setActiveLead(lead);
-          playNotificationSound();
-          await awardXP('lead_captured', `Captured lead from ${lead.full_name || 'Visitor'}!`);
+          if (lead?.id && !seenLeadIdsRef.current.has(lead.id)) {
+            seenLeadIdsRef.current.add(lead.id);
+            setActiveLead(lead);
+            playNotificationSound();
+            await awardXP('lead_captured', `Captured lead from ${lead.full_name || 'Visitor'}!`).catch(() => {});
 
-          // Auto-dismiss after 8 seconds
-          setTimeout(() => {
-            setActiveLead(null);
-          }, 8000);
+            // Auto-dismiss after 8 seconds
+            setTimeout(() => {
+              setActiveLead(null);
+            }, 8000);
+          }
         }
       )
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [agent?.id, awardXP]);

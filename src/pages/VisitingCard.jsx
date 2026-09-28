@@ -51,7 +51,19 @@ export function VisitingCard() {
         created_at: new Date().toISOString()
       };
 
-      await supabase.from('leads').insert(newLead);
+      // 1. Send to Central Server API (so it updates in real time on the Agent's Dashboard across devices)
+      try {
+        await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newLead)
+        });
+      } catch (apiErr) {
+        console.warn('API leads post fallback:', apiErr);
+      }
+
+      // 2. Also save to Supabase / local IndexedDB
+      await supabase.from('leads').insert(newLead).catch(() => {});
       await putInStore('leads', newLead).catch(() => {});
       setSubmittedSuccess(true);
       setForm({ full_name: '', phone: '', email: '', interest_area: 'Term Plan', message: '' });

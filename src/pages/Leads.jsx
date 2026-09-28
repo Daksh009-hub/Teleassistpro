@@ -40,7 +40,21 @@ export function Leads() {
   const loadLeads = async () => {
     setLoading(true);
     try {
-      // 1. Fetch from Supabase (or mock)
+      // 1. Fetch from Central Web Service API (syncs leads submitted from visiting cards across all devices)
+      let apiLeads = [];
+      try {
+        const res = await fetch('/api/leads');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            apiLeads = data;
+          }
+        }
+      } catch (e) {
+        // Fallback silently if offline
+      }
+
+      // 2. Fetch from Supabase (or mock)
       let remoteLeads = [];
       try {
         const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
@@ -51,13 +65,13 @@ export function Leads() {
         console.warn('Supabase fetch leads warning:', e);
       }
 
-      // 2. Fetch from local IndexedDB
+      // 3. Fetch from local IndexedDB
       const localLeads = await getAllFromStore('leads');
       const allClients = await getAllFromStore('clients');
 
-      // 3. Merge unique leads by ID
+      // 4. Merge unique leads by ID
       const map = new Map();
-      [...localLeads, ...remoteLeads].forEach(l => {
+      [...localLeads, ...remoteLeads, ...apiLeads].forEach(l => {
         if (l && l.id) {
           map.set(l.id, l);
         }
@@ -124,6 +138,11 @@ export function Leads() {
     window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('visibilitychange', handleWindowFocus);
 
+    // Auto-poll every 4 seconds to sync any leads captured on visiting cards
+    const pollInterval = setInterval(() => {
+      loadLeads();
+    }, 4000);
+
     // Subscribe to real-time new leads
     const channel = supabase
       .channel('leads-page-channel')
@@ -137,6 +156,7 @@ export function Leads() {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener('focus', handleWindowFocus);
       document.removeEventListener('visibilitychange', handleWindowFocus);
       supabase.removeChannel(channel);
@@ -151,6 +171,15 @@ export function Leads() {
   const handleUpdateStatus = async (lead, newStatus) => {
     try {
       const updated = { ...lead, status: newStatus };
+      try {
+        await fetch(`/api/leads/${lead.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+      } catch (apiErr) {
+        // Fallback silently if offline
+      }
       try {
         await supabase.from('leads').update({ status: newStatus }).eq('id', lead.id);
       } catch (e) {
@@ -360,6 +389,15 @@ export function Leads() {
       // Mark lead as converted
       const updatedLead = { ...convertingLead, status: 'converted', converted_client_id: clientId };
       try {
+        await fetch(`/api/leads/${convertingLead.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'converted', converted_client_id: clientId })
+        });
+      } catch (apiErr) {
+        // Fallback silently if offline
+      }
+      try {
         await supabase.from('leads').update({ status: 'converted', converted_client_id: clientId }).eq('id', convertingLead.id);
       } catch (e) {
         console.warn('Supabase update warning:', e);
@@ -436,6 +474,11 @@ export function Leads() {
   const handleDeleteLead = async (leadId, leadName) => {
     if (window.confirm(`Delete lead "${leadName}"?`)) {
       try {
+        try {
+          await fetch(`/api/leads/${leadId}`, { method: 'DELETE' });
+        } catch (apiErr) {
+          // Fallback silently if offline
+        }
         try {
           await supabase.from('leads').delete().eq('id', leadId);
         } catch (e) {
