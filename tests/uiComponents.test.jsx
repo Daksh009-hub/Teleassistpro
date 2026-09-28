@@ -8,9 +8,21 @@ import { BottomNav } from '../src/components/BottomNav';
 import { AuthProvider } from '../src/context/AuthContext';
 import { GamificationProvider } from '../src/context/GamificationContext';
 import { BrowserRouter } from 'react-router-dom';
+import { safeSetItem } from '../src/utils/storage';
+import { initializeIndexedDB } from '../src/utils/offlineDB';
 import 'fake-indexeddb/auto';
 
 describe('UI Components Integration Tests', () => {
+  beforeEach(async () => {
+    safeSetItem('mock_auth_session', JSON.stringify({
+      user: {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'rajesh.lic@gmail.com',
+        user_metadata: { full_name: 'Rajesh Verma' }
+      }
+    }));
+    await initializeIndexedDB();
+  });
   it('renders ActionEngineCard with correct badges and filter callback', () => {
     let selected = null;
     render(

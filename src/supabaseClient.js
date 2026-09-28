@@ -34,12 +34,20 @@ function createMockSupabase() {
         return { data: { session: null }, error: null };
       },
       async signInWithPassword({ email, password }) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (cleanEmail !== 'rajesh.lic@gmail.com' || password !== 'lic123456') {
+          return {
+            data: { session: null, user: null },
+            error: { message: 'Invalid credentials. Only authorized agent can log in.' }
+          };
+        }
+
         const agents = await offlineDB.getAllFromStore('agents');
         const agent = agents[0];
         const session = {
           user: {
             id: agent?.id || '00000000-0000-0000-0000-000000000001',
-            email: email || 'rajesh.lic@gmail.com',
+            email: 'rajesh.lic@gmail.com',
             user_metadata: { full_name: agent?.full_name || 'Rajesh Verma' }
           },
           access_token: 'mock-jwt-token-' + Date.now()

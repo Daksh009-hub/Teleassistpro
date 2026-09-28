@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
       await initializeIndexedDB();
       
       const { data } = await supabase.auth.getSession();
-      if (data?.session) {
+      if (data?.session && data.session.user?.email === 'rajesh.lic@gmail.com') {
         // Load agent profile
         const agents = await getAllFromStore('agents');
         let currentAgent = agents[0] || INITIAL_AGENT;
@@ -35,10 +35,8 @@ export function AuthProvider({ children }) {
 
         setAgent(currentAgent);
       } else {
-        // Automatically set demo agent for seamless testing if no auth session
-        const agents = await getAllFromStore('agents');
-        const defaultAgent = agents[0] || INITIAL_AGENT;
-        setAgent(defaultAgent);
+        // Strictly require login: do not auto-authenticate if no valid session
+        setAgent(null);
       }
       setLoading(false);
     }
@@ -47,9 +45,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (cleanEmail !== 'rajesh.lic@gmail.com' || password !== 'lic123456') {
+      return { success: false, error: 'Invalid email or password. Only authorized agent can access this dashboard.' };
+    }
+
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
       if (error) throw error;
       const agents = await getAllFromStore('agents');
       const cur = agents[0] || INITIAL_AGENT;

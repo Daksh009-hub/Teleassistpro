@@ -8,6 +8,7 @@ import { AuthProvider } from '../src/context/AuthContext';
 import { GamificationProvider } from '../src/context/GamificationContext';
 import { OfflineProvider } from '../src/context/OfflineContext';
 import { initializeIndexedDB, getAllFromStore, deleteFromStore } from '../src/utils/offlineDB';
+import { safeSetItem, safeRemoveItem } from '../src/utils/storage';
 
 import { Login } from '../src/pages/Login';
 import { Dashboard } from '../src/pages/Dashboard';
@@ -42,10 +43,18 @@ function renderWithProviders(ui, { route = '/' } = {}) {
 
 describe('Full End-to-End Screen Testing Suite', () => {
   beforeEach(async () => {
+    safeSetItem('mock_auth_session', JSON.stringify({
+      user: {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'rajesh.lic@gmail.com',
+        user_metadata: { full_name: 'Rajesh Verma' }
+      }
+    }));
     await initializeIndexedDB();
   });
 
-  it('Screen 1: Login Page renders and login form functions', async () => {
+  it('Screen 1: Login Page renders and login form functions with correct credentials', async () => {
+    safeRemoveItem('mock_auth_session');
     renderWithProviders(<Login />, { route: '/login' });
     expect(screen.getByText(/Agent Login/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Sign In to Assistant/i })).toBeTruthy();
@@ -57,6 +66,23 @@ describe('Full End-to-End Screen Testing Suite', () => {
 
     const submitBtn = screen.getByRole('button', { name: /Sign In to Assistant/i });
     fireEvent.click(submitBtn);
+  });
+
+  it('Screen 1B: Rejects invalid login credentials', async () => {
+    safeRemoveItem('mock_auth_session');
+    renderWithProviders(<Login />, { route: '/login' });
+
+    const emailInput = screen.getByPlaceholderText(/agent@licindia.com/i);
+    const passInput = screen.getByPlaceholderText(/••••••••/i);
+    fireEvent.change(emailInput, { target: { value: 'wrong@lic.com' } });
+    fireEvent.change(passInput, { target: { value: 'wrongpass' } });
+
+    const submitBtn = screen.getByRole('button', { name: /Sign In to Assistant/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid email or password/i)).toBeTruthy();
+    });
   });
 
   it('Screen 2: Dashboard Page renders action engine, clients, and search bar', async () => {
