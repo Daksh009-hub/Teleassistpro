@@ -37,8 +37,10 @@ export function Leads() {
   const cardSlug = agent?.card_slug || 'rajesh-verma';
   const cardUrl = buildPublicUrl(`/card/${cardSlug}`);
 
-  const loadLeads = async () => {
-    setLoading(true);
+  const loadLeads = async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       // 1. Fetch from Central Web Service API (syncs leads submitted from visiting cards across all devices)
       let apiLeads = [];
@@ -107,7 +109,16 @@ export function Leads() {
         (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
       );
 
-      setLeads(merged);
+      // Prevent re-rendering if data is unchanged
+      setLeads(prev => {
+        if (
+          prev.length === merged.length &&
+          prev.every((item, idx) => item.id === merged[idx]?.id && item.status === merged[idx]?.status)
+        ) {
+          return prev;
+        }
+        return merged;
+      });
 
       // Auto-select initial tab if user hasn't explicitly selected one
       if (!hasUserSelectedFilter) {
@@ -124,23 +135,27 @@ export function Leads() {
     } catch (err) {
       console.error('Failed to load leads:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadLeads();
+    // Initial fetch shows loading indicator
+    loadLeads(false);
 
+    // Silent background refresh on window focus
     const handleWindowFocus = () => {
-      loadLeads();
+      loadLeads(true);
     };
 
     window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('visibilitychange', handleWindowFocus);
 
-    // Auto-poll every 4 seconds to sync any leads captured on visiting cards
+    // Silent background polling every 4 seconds to sync leads across devices without flicker
     const pollInterval = setInterval(() => {
-      loadLeads();
+      loadLeads(true);
     }, 4000);
 
     // Subscribe to real-time new leads
@@ -150,7 +165,7 @@ export function Leads() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'leads' },
         () => {
-          loadLeads();
+          loadLeads(true);
         }
       )
       .subscribe();
