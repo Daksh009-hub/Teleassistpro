@@ -1,0 +1,218 @@
+/* Tele-Assist Pro Custom Styles */
+
+:root {
+  --lic-blue: #0d6efd;
+  --lic-dark-blue: #0a4da8;
+  --lic-gold: #ffc107;
+  --lic-light-bg: #f4f6f9;
+  --lic-card-border: #e2e8f0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--lic-light-bg);
+  color: #212529;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: 72px; /* Space for Mobile Bottom Nav */
+}
+
+/* App Container for Mobile Frame & Desktop Scalability */
+.app-container {
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bottom Navigation Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-top: 1px solid var(--lic-card-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 0;
+  z-index: 1030;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #6c757d;
+  font-size: 0.72rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.bottom-nav-item i {
+  font-size: 1.25rem;
+  margin-bottom: 2px;
+}
+
+.bottom-nav-item.active {
+  color: var(--lic-blue);
+  font-weight: 700;
+}
+
+/* Gamification Progress Bar */
+.xp-progress-card {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a4da8 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+.xp-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.xp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffc107, #20c997);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Action Engine Cards */
+.action-engine-badge {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.action-engine-badge:active {
+  transform: scale(0.95);
+}
+
+/* Floating Action Button */
+.fab-btn {
+  position: fixed;
+  bottom: 80px;
+  right: calc(50% - 280px + 16px);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background-color: #0d6efd;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 6px 16px rgba(13, 110, 253, 0.35);
+  z-index: 1020;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+@media (max-width: 600px) {
+  .fab-btn {
+    right: 20px;
+  }
+}
+
+.fab-btn:hover {
+  transform: scale(1.06);
+}
+
+/* Timeline Components */
+.timeline-list {
+  position: relative;
+  padding-left: 28px;
+}
+
+.timeline-list::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 11px;
+  width: 2px;
+  background-color: #dee2e6;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -28px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid var(--lic-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+/* Badges Grid */
+.badge-card {
+  border: 1px solid var(--lic-card-border);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.badge-card.locked {
+  opacity: 0.45;
+  filter: grayscale(1);
+  background-color: #f8f9fa;
+}
+
+.badge-card.unlocked {
+  border-color: #ffc107;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf0 100%);
+  box-shadow: 0 4px 10px rgba(255, 193, 7, 0.15);
+}
+
+/* Toast Container */
+.toast-float-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1090;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+  pointer-events: none !important;
+}
+
+.toast-float-container > * {
+  pointer-events: auto !important;
+}
+
+/* Ensure Modals and Modal Dialogs are always 100% interactive and clickable */
+.modal {
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  pointer-events: auto !important;
+}
+
+.modal-content {
+  pointer-events: auto !important;
+}
+
+.modal-dialog * {
+  pointer-events: auto !important;
+}
