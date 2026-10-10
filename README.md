@@ -112,9 +112,8 @@ To link with a live Supabase project:
 
 1. **Login**: Click *"Quick Demo Login (Rajesh Verma)"* on the `/login` screen.
 **Demo login Credentials**:
-Email:- rajesh.lic@gmail.com
-
-Password:- lic123456
+**Email**:- rajesh.lic@gmail.com
+**Password**:- lic123456
 2. **Action Engine**: Check the top badges and the gamified level progress bar.
 3. **In-App Call**: Tap *"Call Client"* on Ramesh Kumar -> return to tab -> Call Wrap-Up modal appears -> Click *"Generate AI Call Summary"* -> Click *"Save Call & Earn +15 XP"*.
 4. **KYC OCR**: Navigate to KYC Drop-Box -> Upload a sample Aadhaar/PAN photo -> Observe automatic canvas watermarking and DOB mismatch detector.
